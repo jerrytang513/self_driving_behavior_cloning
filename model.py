@@ -27,6 +27,8 @@ for line in lines[1:]:
     current_path = filename
     image = cv2.imread(current_path)
     center_images.append(image)
+    # Flip the image
+    center_images.append(np.fliplr(image))
     
     # Left Images 
     source_path = line[1]
@@ -44,6 +46,8 @@ for line in lines[1:]:
 
     angle = float(line[3])
     angles.append(angle) 
+    # flip the image 
+    angles.append(- angle)
 
     throttle = float(line[4])
     throttles.append(throttle)
@@ -67,10 +71,19 @@ from keras.layers.pooling import MaxPooling2D
 
 model = Sequential()
 model.add(Lambda(lambda x: x / 255.0 - 0.5, input_shape=(160,320,3)))
-model.add(Flatten(input_shape=(160,320,3)))
+model.add(Convolution2D(6, 5, 5, activation="relu"))
+model.add(MaxPooling2D())
+model.add(Convolution2D(6, 5, 5, activation="relu"))
+model.add(MaxPooling2D())
+model.add(Convolution2D(6, 5, 5, activation="relu"))
+model.add(MaxPooling2D())
+model.add(Flatten())
+model.add(Dense(120))
+model.add(Dense(84))
 model.add(Dense(1))
+
 model.compile(loss='mse', optimizer='adam')
-model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=3)
+model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=5)
 
 model.save('model.h5')
 
